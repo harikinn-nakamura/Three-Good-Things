@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      height: 100vh;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(120deg, #2193b0 0%, #6dd5ed 100%);
+      font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'メイリオ', sans-serif;
+    }
+    .container {
+      background: #fff;
+      border-radius: 2rem;
+      box-shadow: 0 6px 30px rgba(33, 147, 176, 0.18), 0 2px 4px rgba(0,0,0,0.06);
+      padding: 2.5rem 2.2rem 2rem 2.2rem;
+      width: 100%;
+      max-width: 430px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      color: #2193b0;
+      margin-bottom: 0.2em;
+      letter-spacing: 0.05em;
+    }
+    p {
+      color: #444;
+      margin-bottom: 1.6em;
+      text-align: center;
+    }
+    label {
+      color: #2193b0;
+      font-weight: 600;
+      margin-bottom: 0.4em;
+      display: block;
+      letter-spacing: 0.03em;
+      text-align: left;
+    }
+    .input-area {
+      margin-bottom: 1.2em;
+      width: 100%;
+      max-width: 330px;      /* 追加：入力欄を中央に幅指定 */
+      margin-left: auto;     /* 追加：中央寄せ */
+      margin-right: auto;    /* 追加：中央寄せ */
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;  /* 追加：横幅いっぱいに */
+    }
+    textarea {
+      width: 100%;
+      min-height: 2.8em;
+      font-size: 1.05em;
+      padding: 0.7em 1em;
+      border: 1.5px solid #6dd5ed;
+      border-radius: 0.9em;
+      outline: none;
+      resize: vertical;
+      transition: border 0.2s;
+      background: #f6fbff;
+      box-sizing: border-box;
+    }
+    textarea.input-required {
+      border: 1.5px solid #e06464;
+    }
+    .error-message {
+      color: #e06464;
+      background: #fff4f4;
+      border-radius: 0.6em;
+      padding: 0.7em 1em;
+      margin-bottom: 1.1em;
+      font-size: 0.97em;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+      display: none;
+    }
+    .success-message {
+      color: #2193b0;
+      background: #f3fcff;
+      border-radius: 0.6em;
+      padding: 0.7em 1em;
+      margin-bottom: 1.1em;
+      font-size: 0.97em;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+      display: none;
+    }
+    #submitBtn {
+      background: #fff;
+      color: #2193b0;
+      border: 2px solid #2193b0;
+      border-radius: 1.2em;
+      padding: 0.9em 0;
+      font-size: 1.1em;
+      width: 100%;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(33,147,176,0.07);
+      transition: background 0.2s, color 0.2s, border 0.2s;
+      margin-top: 0.5em;
+      margin-bottom: 0.2em;
+      max-width: 330px;      /* 追加：送信ボタンも入力欄と揃える */
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #submitBtn:hover {
+      background: #2193b0;
+      color: #fff;
+      border: 2px solid #6dd5ed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>スリーグッドシングス</h1>
+    <p>今日あった３つの良いことを教えてください。</p>
+
+    <div id="error-area" class="error-message"></div>
+    <div id="success-area" class="success-message"></div>
+
+    <div class="input-area">
+      <label for="goodThing1">良いこと１ (必須):</label>
+      <textarea id="goodThing1" name="goodThing1" required></textarea>
+    </div>
+    <div class="input-area">
+      <label for="goodThing2">良いこと２ (必須):</label>
+      <textarea id="goodThing2" name="goodThing2" required></textarea>
+    </div>
+    <div class="input-area">
+      <label for="goodThing3">良いこと３ (必須):</label>
+      <textarea id="goodThing3" name="goodThing3" required></textarea>
+    </div>
+    <button id="submitBtn">送信</button>
+  </div>
+
+  <script>
+    const errorArea = document.getElementById('error-area');
+    const successArea = document.getElementById('success-area');
+    const submitBtn = document.getElementById('submitBtn');
+    const goodThing1Input = document.getElementById('goodThing1');
+    const goodThing2Input = document.getElementById('goodThing2');
+    const goodThing3Input = document.getElementById('goodThing3');
+    const inputs = [goodThing1Input, goodThing2Input, goodThing3Input];
+
+    submitBtn.addEventListener('click', function() {
+      errorArea.style.display = 'none';
+      successArea.style.display = 'none';
+      inputs.forEach(input => input.classList.remove('input-required'));
+
+      const formData = {
+        goodThing1: goodThing1Input.value,
+        goodThing2: goodThing2Input.value,
+        goodThing3: goodThing3Input.value
+      };
+
+      let hasError = false;
+      inputs.forEach(input => {
+        if (!input.value.trim()) {
+          input.classList.add('input-required');
+          hasError = true;
+        }
+      });
+
+      if (hasError) {
+        errorArea.textContent = '未入力の項目があります。';
+        errorArea.style.display = 'block';
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(response => {
+          if (response.success) {
+            successArea.textContent = response.message;
+            successArea.style.display = 'block';
+            inputs.forEach(input => input.value = '');
+          } else {
+            errorArea.textContent = response.message;
+            errorArea.style.display = 'block';
+          }
+        })
+        .withFailureHandler(error => {
+          errorArea.textContent = '送信エラーが発生しました。' + error;
+          errorArea.style.display = 'block';
+        })
+        .submitForm(formData);
+    });
+  </script>
+</body>
+</html>
