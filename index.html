@@ -51,52 +51,53 @@
     .input-area {
       margin-bottom: 1.2em;
       width: 100%;
-      max-width: 330px;      /* 追加：入力欄を中央に幅指定 */
-      margin-left: auto;     /* 追加：中央寄せ */
-      margin-right: auto;    /* 追加：中央寄せ */
+      max-width: 330px;
+      margin-left: auto;
+      margin-right: auto;
       display: flex;
       flex-direction: column;
-      align-items: stretch;  /* 追加：横幅いっぱいに */
+      align-items: stretch;
     }
+    
+    /* ★変更点：input[type="email"]にもスタイルを適用 */
+    input[type="email"],
     textarea {
       width: 100%;
-      min-height: 2.8em;
       font-size: 1.05em;
       padding: 0.7em 1em;
       border: 1.5px solid #6dd5ed;
       border-radius: 0.9em;
       outline: none;
-      resize: vertical;
       transition: border 0.2s;
       background: #f6fbff;
       box-sizing: border-box;
     }
+    textarea {
+      min-height: 2.8em;
+      resize: vertical;
+    }
+    input[type="email"].input-required,
     textarea.input-required {
       border: 1.5px solid #e06464;
+    }
+    
+    .error-message, .success-message {
+      border-radius: 0.6em;
+      padding: 0.7em 1em;
+      margin-bottom: 1.1em;
+      font-size: 0.97em;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+      display: none;
     }
     .error-message {
       color: #e06464;
       background: #fff4f4;
-      border-radius: 0.6em;
-      padding: 0.7em 1em;
-      margin-bottom: 1.1em;
-      font-size: 0.97em;
-      width: 100%;
-      box-sizing: border-box;
-      text-align: center;
-      display: none;
     }
     .success-message {
       color: #2193b0;
       background: #f3fcff;
-      border-radius: 0.6em;
-      padding: 0.7em 1em;
-      margin-bottom: 1.1em;
-      font-size: 0.97em;
-      width: 100%;
-      box-sizing: border-box;
-      text-align: center;
-      display: none;
     }
     #submitBtn {
       background: #fff;
@@ -112,7 +113,7 @@
       transition: background 0.2s, color 0.2s, border 0.2s;
       margin-top: 0.5em;
       margin-bottom: 0.2em;
-      max-width: 330px;      /* 追加：送信ボタンも入力欄と揃える */
+      max-width: 330px;
       display: block;
       margin-left: auto;
       margin-right: auto;
@@ -133,6 +134,11 @@
     <div id="success-area" class="success-message"></div>
 
     <div class="input-area">
+      <label for="email">メールアドレス (必須):</label>
+      <input type="email" id="email" name="email" required placeholder="example@gmail.com">
+    </div>
+
+    <div class="input-area">
       <label for="goodThing1">良いこと１ (必須):</label>
       <textarea id="goodThing1" name="goodThing1" required></textarea>
     </div>
@@ -151,17 +157,35 @@
     const errorArea = document.getElementById('error-area');
     const successArea = document.getElementById('success-area');
     const submitBtn = document.getElementById('submitBtn');
+    
+    // ★変更点：メールアドレス要素を取得
+    const emailInput = document.getElementById('email');
     const goodThing1Input = document.getElementById('goodThing1');
     const goodThing2Input = document.getElementById('goodThing2');
     const goodThing3Input = document.getElementById('goodThing3');
-    const inputs = [goodThing1Input, goodThing2Input, goodThing3Input];
+    
+    // ★変更点：チェック対象に emailInput を追加
+    const inputs = [emailInput, goodThing1Input, goodThing2Input, goodThing3Input];
+
+    // ★ 新しいデプロイで発行されたURLをここに貼り付けてください
+    const GAS_URL = 'https://script.google.com/a/macros/harita.co.jp/s/AKfycbxVYAr4Gg0GsxWBLWfGQhWkxc_1-EgC2lzxvq0fHAaP5qZEnJXFf7-h4-i4WQaJfXekbQ/exec';
 
     submitBtn.addEventListener('click', function() {
       errorArea.style.display = 'none';
       successArea.style.display = 'none';
       inputs.forEach(input => input.classList.remove('input-required'));
 
+      // 簡単なメールアドレス形式チェック
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (emailInput.value.trim() !== '' && !emailRegex.test(emailInput.value)) {
+        errorArea.textContent = '有効なメールアドレスを入力してください。';
+        errorArea.style.display = 'block';
+        emailInput.classList.add('input-required');
+        return;
+      }
+
       const formData = {
+        email: emailInput.value, // ★追加
         goodThing1: goodThing1Input.value,
         goodThing2: goodThing2Input.value,
         goodThing3: goodThing3Input.value
@@ -181,22 +205,37 @@
         return;
       }
 
-      google.script.run
-        .withSuccessHandler(response => {
-          if (response.success) {
-            successArea.textContent = response.message;
-            successArea.style.display = 'block';
-            inputs.forEach(input => input.value = '');
-          } else {
-            errorArea.textContent = response.message;
-            errorArea.style.display = 'block';
-          }
-        })
-        .withFailureHandler(error => {
-          errorArea.textContent = '送信エラーが発生しました。' + error;
+      submitBtn.disabled = true;
+      submitBtn.textContent = '送信中...';
+
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+        body: JSON.stringify(formData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '送信';
+
+        if (data.success) {
+          successArea.textContent = data.message;
+          successArea.style.display = 'block';
+          inputs.forEach(input => input.value = ''); 
+        } else {
+          errorArea.textContent = data.message;
           errorArea.style.display = 'block';
-        })
-        .submitForm(formData);
+        }
+      })
+      .catch(error => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '送信';
+        errorArea.textContent = '通信エラーが発生しました。ネットワークを確認してください。';
+        errorArea.style.display = 'block';
+        console.error('Error:', error);
+      });
     });
   </script>
 </body>
